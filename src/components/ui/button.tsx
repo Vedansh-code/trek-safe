@@ -15,6 +15,10 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        emergency: "bg-emergency text-emergency-foreground hover:bg-emergency/90 shadow-lg emergency-pulse",
+        police: "bg-police text-police-foreground hover:bg-police/90 police-shadow",
+        success: "bg-success text-success-foreground hover:bg-success/90",
+        warning: "bg-warning text-warning-foreground hover:bg-warning/90",
       },
       size: {
         default: "h-10 px-4 py-2",
