@@ -14,8 +14,10 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix default Leaflet marker icon issue
-delete L.Icon.Default.prototype._getIconUrl;
+// ✅ Safe Leaflet marker icon fix (no blank page crash)
+if ((L.Icon.Default.prototype as any)._getIconUrl) {
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+}
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -79,7 +81,7 @@ const TouristApp = () => {
 
   const checkRestrictedZone = (location: { lat: number; lng: number }) => {
     const restrictedZones = [
-      { lat: 40.7128, lng: -74.006, radius: 0.01 },
+      { lat: 40.7128, lng: -74.006, radius: 0.01 }, // Example restricted zone
     ];
 
     return restrictedZones.some((zone) => {
@@ -296,36 +298,45 @@ const TouristApp = () => {
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
-                  Current Location
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {currentLocation ? (
-                  <div className="space-y-4">
-                    <div><strong>Latitude:</strong> {currentLocation.lat.toFixed(6)}</div>
-                    <div><strong>Longitude:</strong> {currentLocation.lng.toFixed(6)}</div>
-                    <MapContainer center={[currentLocation.lat, currentLocation.lng]} zoom={13} scrollWheelZoom={false} className="leaflet-container">
-                      <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      />
-                      <Marker position={[currentLocation.lat, currentLocation.lng]}>
-                        <Popup>You are here!</Popup>
-                      </Marker>
-                    </MapContainer>
-                    <div className="text-success text-sm flex items-center gap-1">
-                      <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
-                      Location updated every 5 seconds
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">Getting your location...</p>
-                )}
-              </CardContent>
-            </Card>
+  <CardHeader>
+    <CardTitle className="flex items-center gap-2">
+      <MapPin className="h-5 w-5" />
+      Current Location
+    </CardTitle>
+  </CardHeader>
+  <CardContent>
+    {currentLocation ? (
+      <div className="space-y-4">
+        <div><strong>Latitude:</strong> {currentLocation.lat.toFixed(6)}</div>
+        <div><strong>Longitude:</strong> {currentLocation.lng.toFixed(6)}</div>
+        
+        <MapContainer
+          center={[currentLocation.lat, currentLocation.lng]}
+          zoom={13}
+          scrollWheelZoom={false}
+          style={{ height: "300px", width: "100%" }}
+          className="rounded-lg overflow-hidden shadow-md"
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <Marker position={[currentLocation.lat, currentLocation.lng]}>
+            <Popup>You are here!</Popup>
+          </Marker>
+        </MapContainer>
+
+        <div className="text-success text-sm flex items-center gap-1">
+          <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
+          Location updated every 5 seconds
+        </div>
+      </div>
+    ) : (
+      <p className="text-muted-foreground">Getting your location...</p>
+    )}
+  </CardContent>
+</Card>
+
           </div>
 
           {/* Safety Information */}
