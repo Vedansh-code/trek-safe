@@ -9,6 +9,19 @@ import { AlertTriangle, MapPin, Shield, QrCode, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
 
+// Import Leaflet components
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// Fix default Leaflet marker icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
+
 interface TouristData {
   id: string;
   name: string;
@@ -20,14 +33,14 @@ interface TouristData {
 }
 
 const TouristApp = () => {
-  const [step, setStep] = useState<'register' | 'dashboard'>('register');
+  const [step, setStep] = useState<"register" | "dashboard">("register");
   const [touristData, setTouristData] = useState<TouristData>({
-    id: '',
-    name: '',
-    age: '',
-    idProof: '',
-    emergencyContact: '',
-    itinerary: ''
+    id: "",
+    name: "",
+    age: "",
+    idProof: "",
+    emergencyContact: "",
+    itinerary: "",
   });
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isTracking, setIsTracking] = useState(false);
@@ -41,12 +54,11 @@ const TouristApp = () => {
           (position) => {
             const newLocation = {
               lat: position.coords.latitude,
-              lng: position.coords.longitude
+              lng: position.coords.longitude,
             };
             setCurrentLocation(newLocation);
-            setTouristData(prev => ({ ...prev, location: newLocation }));
-            
-            // Simulate geo-fence check (example: restricted area)
+            setTouristData((prev) => ({ ...prev, location: newLocation }));
+
             if (checkRestrictedZone(newLocation)) {
               toast({
                 title: "⚠️ Restricted Area Warning",
@@ -65,14 +77,12 @@ const TouristApp = () => {
     }
   }, [isTracking, toast]);
 
-  // Simulate restricted zone check
   const checkRestrictedZone = (location: { lat: number; lng: number }) => {
-    // Example restricted zone coordinates (can be replaced with actual polygon)
     const restrictedZones = [
-      { lat: 40.7128, lng: -74.0060, radius: 0.01 } // Example: restricted area in NYC
+      { lat: 40.7128, lng: -74.006, radius: 0.01 },
     ];
 
-    return restrictedZones.some(zone => {
+    return restrictedZones.some((zone) => {
       const distance = Math.sqrt(
         Math.pow(location.lat - zone.lat, 2) + Math.pow(location.lng - zone.lng, 2)
       );
@@ -90,9 +100,9 @@ const TouristApp = () => {
       return;
     }
 
-    const newId = 'TRS-' + Math.random().toString(36).substr(2, 9).toUpperCase();
-    setTouristData(prev => ({ ...prev, id: newId }));
-    setStep('dashboard');
+    const newId = "TRS-" + Math.random().toString(36).substr(2, 9).toUpperCase();
+    setTouristData((prev) => ({ ...prev, id: newId }));
+    setStep("dashboard");
     setIsTracking(true);
 
     toast({
@@ -109,18 +119,17 @@ const TouristApp = () => {
         variant: "destructive",
       });
 
-      // Simulate sending SOS to backend
       console.log("SOS Alert:", {
         touristId: touristData.id,
         name: touristData.name,
         location: currentLocation,
         timestamp: new Date().toISOString(),
-        emergencyContact: touristData.emergencyContact
+        emergencyContact: touristData.emergencyContact,
       });
     }
   };
 
-  if (step === 'register') {
+  if (step === "register") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-success/5 via-background to-primary/5">
         <div className="container mx-auto px-4 py-8">
@@ -141,9 +150,7 @@ const TouristApp = () => {
           <Card className="max-w-2xl mx-auto">
             <CardHeader>
               <CardTitle>Personal Information</CardTitle>
-              <CardDescription>
-                Provide your details for emergency identification and contact
-              </CardDescription>
+              <CardDescription>Provide your details for emergency identification and contact</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid md:grid-cols-2 gap-4">
@@ -152,7 +159,7 @@ const TouristApp = () => {
                   <Input
                     id="name"
                     value={touristData.name}
-                    onChange={(e) => setTouristData(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) => setTouristData((prev) => ({ ...prev, name: e.target.value }))}
                     placeholder="Enter your full name"
                   />
                 </div>
@@ -162,7 +169,7 @@ const TouristApp = () => {
                     id="age"
                     type="number"
                     value={touristData.age}
-                    onChange={(e) => setTouristData(prev => ({ ...prev, age: e.target.value }))}
+                    onChange={(e) => setTouristData((prev) => ({ ...prev, age: e.target.value }))}
                     placeholder="Enter your age"
                   />
                 </div>
@@ -173,7 +180,7 @@ const TouristApp = () => {
                 <Input
                   id="idProof"
                   value={touristData.idProof}
-                  onChange={(e) => setTouristData(prev => ({ ...prev, idProof: e.target.value }))}
+                  onChange={(e) => setTouristData((prev) => ({ ...prev, idProof: e.target.value }))}
                   placeholder="Enter your ID proof number"
                 />
               </div>
@@ -183,7 +190,7 @@ const TouristApp = () => {
                 <Input
                   id="emergencyContact"
                   value={touristData.emergencyContact}
-                  onChange={(e) => setTouristData(prev => ({ ...prev, emergencyContact: e.target.value }))}
+                  onChange={(e) => setTouristData((prev) => ({ ...prev, emergencyContact: e.target.value }))}
                   placeholder="Emergency contact phone number"
                 />
               </div>
@@ -193,7 +200,7 @@ const TouristApp = () => {
                 <Textarea
                   id="itinerary"
                   value={touristData.itinerary}
-                  onChange={(e) => setTouristData(prev => ({ ...prev, itinerary: e.target.value }))}
+                  onChange={(e) => setTouristData((prev) => ({ ...prev, itinerary: e.target.value }))}
                   placeholder="Describe your planned activities and locations"
                   rows={4}
                 />
@@ -274,10 +281,10 @@ const TouristApp = () => {
                 <CardDescription>Use in case of immediate danger</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button 
-                  onClick={handleSOS} 
-                  variant="emergency" 
-                  size="lg" 
+                <Button
+                  onClick={handleSOS}
+                  variant="emergency"
+                  size="lg"
                   className="w-full text-xl py-8 emergency-pulse"
                 >
                   🚨 SOS EMERGENCY
@@ -297,9 +304,18 @@ const TouristApp = () => {
               </CardHeader>
               <CardContent>
                 {currentLocation ? (
-                  <div className="space-y-2">
+                  <div className="space-y-4">
                     <div><strong>Latitude:</strong> {currentLocation.lat.toFixed(6)}</div>
                     <div><strong>Longitude:</strong> {currentLocation.lng.toFixed(6)}</div>
+                    <MapContainer center={[currentLocation.lat, currentLocation.lng]} zoom={13} scrollWheelZoom={false} className="leaflet-container">
+                      <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      />
+                      <Marker position={[currentLocation.lat, currentLocation.lng]}>
+                        <Popup>You are here!</Popup>
+                      </Marker>
+                    </MapContainer>
                     <div className="text-success text-sm flex items-center gap-1">
                       <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
                       Location updated every 5 seconds
