@@ -159,21 +159,30 @@ const TouristApp = () => {
   };
 
   const handleSOS = () => {
-    if (currentLocation) {
-      toast({
-        title: "🚨 SOS ALERT SENT!",
-        description: `Emergency alert dispatched to authorities with your current location.`,
-        variant: "destructive",
-      });
-      console.log("SOS Alert:", {
-        touristId: touristData.id,
-        name: touristData.name,
-        location: currentLocation,
-        timestamp: new Date().toISOString(),
-        emergencyContact: touristData.emergencyContact,
-      });
-    }
-  };
+  if (currentLocation) {
+    // Create SMS link with emergency contact + location
+    const smsLink = `sms:${touristData.emergencyContact}?body=🚨 SOS! I need help. My location is ${currentLocation.lat}, ${currentLocation.lng}`;
+
+    // Open SMS app
+    window.location.href = smsLink;
+
+    // Keep your toast for user feedback
+    toast({
+      title: "🚨 SOS ALERT!",
+      description: `Opening SMS app to notify your emergency contact.`,
+      variant: "destructive",
+    });
+
+    console.log("SOS Alert:", {
+      touristId: touristData.id,
+      name: touristData.name,
+      location: currentLocation,
+      timestamp: new Date().toISOString(),
+      emergencyContact: touristData.emergencyContact,
+    });
+  }
+};
+
 
   // ===================== REGISTER PAGE =====================
   if (step === "register") {
