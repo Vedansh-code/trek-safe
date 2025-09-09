@@ -158,15 +158,22 @@ const TouristApp = () => {
     });
   };
 
-  const handleSOS = () => {
+const handleSOS = () => {
   if (currentLocation) {
-    // Create SMS link with emergency contact + location
-    const smsLink = `sms:${touristData.emergencyContact}?body=🚨 SOS! I need help. My location is ${currentLocation.lat}, ${currentLocation.lng}`;
+    // Google Maps link with coordinates
+    const mapsLink = `https://maps.google.com/?q=${currentLocation.lat},${currentLocation.lng}`;
+
+    // Create SMS link with emergency contact, name, and location link
+    const smsBody = encodeURIComponent(
+      `🚨 SOS! This is ${touristData.name}. I need help!\nMy location: ${mapsLink}`
+    );
+
+    const smsLink = `sms:${touristData.emergencyContact}?body=${smsBody}`;
 
     // Open SMS app
     window.location.href = smsLink;
 
-    // Keep your toast for user feedback
+    // Toast for user feedback
     toast({
       title: "🚨 SOS ALERT!",
       description: `Opening SMS app to notify your emergency contact.`,
@@ -177,11 +184,13 @@ const TouristApp = () => {
       touristId: touristData.id,
       name: touristData.name,
       location: currentLocation,
+      mapsLink,
       timestamp: new Date().toISOString(),
       emergencyContact: touristData.emergencyContact,
     });
   }
 };
+
 
 
   // ===================== REGISTER PAGE =====================
