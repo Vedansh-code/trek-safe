@@ -4,19 +4,35 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { 
-  Shield, 
-  MapPin, 
-  AlertTriangle, 
-  Users, 
-  QrCode, 
-  ArrowLeft, 
+import {
+  Shield,
+  MapPin,
+  AlertTriangle,
+  Users,
+  QrCode,
+  ArrowLeft,
   Search,
   Bell,
   Eye,
-  Clock
+  Clock,
+  X
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+// Leaflet imports
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// Leaflet icon fix
+if ((L.Icon.Default.prototype as any)._getIconUrl) {
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+}
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
 
 interface Tourist {
   id: string;
@@ -43,12 +59,12 @@ const PoliceDashboard = () => {
   const [tourists, setTourists] = useState<Tourist[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [selectedTourist, setSelectedTourist] = useState<Tourist | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showMap, setShowMap] = useState(false); // ✅ Map popup toggle state
   const { toast } = useToast();
 
-  // Simulate real-time data
   useEffect(() => {
-    // Mock data
     const mockTourists: Tourist[] = [
       {
         id: 'TRS-ABC123',
@@ -65,7 +81,7 @@ const PoliceDashboard = () => {
         age: '34',
         location: { lat: 40.7580, lng: -73.9855 },
         status: 'warning',
-        lastUpdate: new Date(Date.now() - 300000).toISOString(), // 5 min ago
+        lastUpdate: new Date(Date.now() - 300000).toISOString(),
         emergencyContact: '+1-234-567-8901'
       },
       {
@@ -74,7 +90,7 @@ const PoliceDashboard = () => {
         age: '25',
         location: { lat: 40.6892, lng: -74.0445 },
         status: 'emergency',
-        lastUpdate: new Date(Date.now() - 120000).toISOString(), // 2 min ago
+        lastUpdate: new Date(Date.now() - 120000).toISOString(),
         emergencyContact: '+1-234-567-8902'
       }
     ];
@@ -105,7 +121,6 @@ const PoliceDashboard = () => {
     setTourists(mockTourists);
     setAlerts(mockAlerts);
 
-    // Simulate real-time updates
     const interval = setInterval(() => {
       setTourists(prev => prev.map(tourist => ({
         ...tourist,
@@ -139,7 +154,7 @@ const PoliceDashboard = () => {
   };
 
   const resolveAlert = (alertId: string) => {
-    setAlerts(prev => prev.map(alert => 
+    setAlerts(prev => prev.map(alert =>
       alert.id === alertId ? { ...alert, status: 'resolved' } : alert
     ));
     toast({
@@ -154,6 +169,22 @@ const PoliceDashboard = () => {
   );
 
   const activeAlerts = alerts.filter(alert => alert.status === 'active');
+
+  const openModal = (tourist: Tourist) => {
+    setSelectedTourist(tourist);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setTimeout(() => setSelectedTourist(null), 300);
+  };
+
+  useEffect(() => {
+    if (selectedTourist) {
+      setIsModalOpen(false);
+      setTimeout(() => setIsModalOpen(true), 10);
+    }
+  }, [selectedTourist]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-police/5 via-background to-primary/5">
@@ -189,7 +220,6 @@ const PoliceDashboard = () => {
         </div>
 
         <div className="grid lg:grid-cols-4 gap-6">
-          {/* Alerts Panel */}
           <div className="lg:col-span-1 space-y-6">
             <Card className="border-emergency/30">
               <CardHeader>
@@ -214,9 +244,9 @@ const PoliceDashboard = () => {
                       </div>
                       <div className="font-medium">{alert.touristName}</div>
                       <div className="text-sm text-muted-foreground mb-2">{alert.message}</div>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
+                      <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => resolveAlert(alert.id)}
                         className="w-full"
                       >
@@ -247,9 +277,7 @@ const PoliceDashboard = () => {
             </Card>
           </div>
 
-          {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
-            {/* Search & Map Controls */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -266,7 +294,7 @@ const PoliceDashboard = () => {
                       className="pl-10"
                     />
                   </div>
-                  <Button variant="police">
+                  <Button variant="police" onClick={() => setShowMap(true)}>
                     <Eye className="h-4 w-4 mr-2" />
                     Map View
                   </Button>
@@ -274,7 +302,6 @@ const PoliceDashboard = () => {
               </CardHeader>
             </Card>
 
-            {/* Tourist List */}
             <div className="grid gap-4">
               {filteredTourists.map((tourist) => (
                 <Card key={tourist.id} className={`transition-all duration-200 hover:shadow-md ${tourist.status === 'emergency' ? 'border-emergency/50' : ''}`}>
@@ -304,7 +331,7 @@ const PoliceDashboard = () => {
                           {new Date(tourist.lastUpdate).toLocaleTimeString()}
                         </div>
                         <div className="space-x-2">
-                          <Button size="sm" variant="outline" onClick={() => setSelectedTourist(tourist)}>
+                          <Button size="sm" variant="outline" onClick={() => openModal(tourist)}>
                             View Details
                           </Button>
                           {tourist.status === 'emergency' && (
@@ -319,57 +346,120 @@ const PoliceDashboard = () => {
                 </Card>
               ))}
             </div>
-
-            {/* Tourist Details Modal */}
-            {selectedTourist && (
-              <Card className="border-2 border-police/30">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-police">Tourist Details</CardTitle>
-                    <Button variant="ghost" onClick={() => setSelectedTourist(null)}>
-                      ✕
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <strong>Name:</strong> {selectedTourist.name}
-                    </div>
-                    <div>
-                      <strong>Age:</strong> {selectedTourist.age}
-                    </div>
-                    <div>
-                      <strong>Tourist ID:</strong> {selectedTourist.id}
-                    </div>
-                    <div className={`font-medium ${getStatusColor(selectedTourist.status)}`}>
-                      <strong>Status:</strong> {selectedTourist.status.toUpperCase()}
-                    </div>
-                    <div>
-                      <strong>Emergency Contact:</strong> {selectedTourist.emergencyContact}
-                    </div>
-                    <div>
-                      <strong>Last Update:</strong> {new Date(selectedTourist.lastUpdate).toLocaleString()}
-                    </div>
-                  </div>
-                  <div>
-                    <strong>Current Location:</strong>
-                    <div className="mt-2 p-3 bg-muted/50 rounded-lg">
-                      Lat: {selectedTourist.location.lat.toFixed(6)}<br />
-                      Lng: {selectedTourist.location.lng.toFixed(6)}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="police">Call Emergency Contact</Button>
-                    <Button variant="outline">View on Map</Button>
-                    <Button variant="outline">Send Message</Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
         </div>
       </div>
+
+            {/* Modal with opening & closing transition */}
+      {selectedTourist && (
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-opacity duration-300 ${
+            isModalOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+          onClick={closeModal}
+        >
+          <div
+            className={`bg-background rounded-xl shadow-lg max-w-lg w-full p-6 transform transition-all duration-300 ${
+              isModalOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-police">Tourist Details</h2>
+              <Button variant="ghost" onClick={closeModal}>
+                ✕
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div><strong>Name:</strong> {selectedTourist.name}</div>
+                <div><strong>Age:</strong> {selectedTourist.age}</div>
+                <div><strong>Tourist ID:</strong> {selectedTourist.id}</div>
+                <div className={`font-medium ${getStatusColor(selectedTourist.status)}`}>
+                  <strong>Status:</strong> {selectedTourist.status.toUpperCase()}
+                </div>
+                <div><strong>Emergency Contact:</strong> {selectedTourist.emergencyContact}</div>
+                <div><strong>Last Update:</strong> {new Date(selectedTourist.lastUpdate).toLocaleString()}</div>
+              </div>
+
+              {/* Mini map for this tourist only */}
+              <div>
+                <strong>Current Location:</strong>
+                <div className="mt-2 h-64 w-full rounded-lg overflow-hidden border">
+                  <MapContainer
+                    center={[selectedTourist.location.lat, selectedTourist.location.lng]}
+                    zoom={14}
+                    style={{ height: "100%", width: "100%" }}
+                  >
+                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    <Marker position={[selectedTourist.location.lat, selectedTourist.location.lng]}>
+                      <Popup>
+                        {selectedTourist.name} ({selectedTourist.status.toUpperCase()})
+                      </Popup>
+                    </Marker>
+                  </MapContainer>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button variant="police">Call Emergency Contact</Button>
+                <Button variant="outline">Send Message</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Map Popup Overlay */}
+      {/* Map Popup Overlay */}
+{showMap && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    onClick={() => setShowMap(false)}
+  >
+    <div
+      className="relative bg-background rounded-2xl shadow-xl w-[95%] max-w-5xl h-[85vh] flex flex-col overflow-hidden"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Close button */}
+      <div className="absolute top-3 right-3 z-[1000]">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full bg-white/80 backdrop-blur hover:bg-white"
+          onClick={() => setShowMap(false)}
+        >
+          <X className="h-5 w-5 text-black" />
+        </Button>
+      </div>
+
+      {/* Map fills the popup */}
+      <MapContainer
+        center={[40.7128, -74.0060]}
+        zoom={12}
+        className="flex-1 w-full h-full rounded-b-2xl"
+      >
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        {tourists.map((tourist) => (
+          <Marker
+            key={tourist.id}
+            position={[tourist.location.lat, tourist.location.lng]}
+          >
+            <Popup>
+              <div className="font-semibold">{tourist.name}</div>
+              <div className="text-sm text-muted-foreground">
+                Status: {tourist.status.toUpperCase()}
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
