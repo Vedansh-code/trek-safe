@@ -57,7 +57,7 @@ interface Alert {
 }
 
 // ====================== Backend URL ======================
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_API_BASE || "https://trek-safe-backend.onrender.com";
 
 // ====================== Component ======================
 const PoliceDashboard = () => {
