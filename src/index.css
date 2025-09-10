@@ -2,12 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here.
 All colors MUST be HSL.
 */
 
 @layer base {
+  html {
+    @apply scroll-auto;
+  }
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
@@ -34,13 +36,13 @@ All colors MUST be HSL.
     /* Emergency Colors */
     --emergency: 0 85% 60%; /* Emergency Red */
     --emergency-foreground: 0 0% 98%;
-    
+
     --warning: 35 91% 65%; /* Warning Amber */
     --warning-foreground: 0 0% 9%;
-    
+
     --success: 142 76% 36%; /* Safety Green */
     --success-foreground: 0 0% 98%;
-    
+
     --police: 220 91% 45%; /* Police Blue */
     --police-foreground: 0 0% 98%;
 
@@ -52,16 +54,16 @@ All colors MUST be HSL.
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
-    
+
     /* Gradients */
     --gradient-emergency: linear-gradient(135deg, hsl(var(--emergency)), hsl(0 85% 45%));
     --gradient-police: linear-gradient(135deg, hsl(var(--police)), hsl(220 91% 35%));
     --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(142 76% 28%));
-    
+
     /* Shadows */
     --shadow-emergency: 0 10px 30px -10px hsl(var(--emergency) / 0.3);
     --shadow-police: 0 10px 30px -10px hsl(var(--police) / 0.3);
-    
+
     /* Animations */
     --pulse-emergency: pulse-emergency 2s infinite;
     --transition-emergency: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -108,13 +110,13 @@ All colors MUST be HSL.
     /* Dark mode emergency colors */
     --emergency: 0 85% 65%; /* Slightly brighter for contrast */
     --emergency-foreground: 0 0% 98%;
-    
+
     --warning: 35 91% 70%; /* Brighter warning */
     --warning-foreground: 0 0% 9%;
-    
+
     --success: 142 76% 45%; /* Brighter success */
     --success-foreground: 0 0% 98%;
-    
+
     --police: 220 91% 55%; /* Brighter police blue */
     --police-foreground: 0 0% 98%;
 
@@ -150,14 +152,26 @@ All colors MUST be HSL.
   .emergency-pulse {
     animation: pulse-emergency 2s infinite;
   }
-  
+
   .emergency-shadow {
     box-shadow: var(--shadow-emergency);
   }
-  
+
   .police-shadow {
     box-shadow: var(--shadow-police);
   }
+
+  /* --- NEW ANIMATION CLASSES ADDED HERE --- */
+  .animate-blob {
+    animation: blob 7s infinite;
+  }
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+  /* -------------------------------------- */
 }
 
 @keyframes pulse-emergency {
@@ -171,9 +185,25 @@ All colors MUST be HSL.
   }
 }
 
+/* --- NEW KEYFRAMES ADDED HERE --- */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+/* -------------------------------- */
+
 .leaflet-container {
   width: 100%;
   height: 300px;
   border-radius: 0.5rem;
 }
-
