@@ -34,6 +34,9 @@ L.Icon.Default.mergeOptions({
     shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
+const API_BASE = "http://localhost:5000";
+
+
 interface TouristData {
     id: string;
     name: string;
@@ -140,142 +143,85 @@ const TouristApp = () => {
    >("green");
 
 
-    useEffect(() => {
-        if (isTracking) {
-            const interval = setInterval(() => {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const newLocation = {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude,
-                        };
-                        setCurrentLocation(newLocation);
-                        setTouristData((prev) => ({
-                            ...prev,
-                            location: newLocation,
-                        }));
+   useEffect(() => {
+  if (isTracking && touristData.id) {
+    const interval = setInterval(() => {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const newLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
 
-                        const zoneType = checkRestrictedZone(newLocation);
+          setCurrentLocation(newLocation);
+          setTouristData((prev) => ({
+            ...prev,
+            location: newLocation,
+          }));
 
-                        const insideRestricted =
-                            checkRestrictedZone(newLocation);
+          // ✅ Send to backend
+          try {
+            await fetch(`${API_BASE}/tourists/${touristData.id}/location`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(newLocation),
+            });
+          } catch (err) {
+            console.error("Location update failed:", err);
+          }
 
-                        // ✅ Only show toast when entering (false → true)
-                        // 🔴 Red Zone
-                        if (zoneType === "red" && inRestrictedZone !== "red") {
-                            setInRestrictedZone("red");
-                            toast({
-                                title: "🚨 Danger Zone!",
-                                description:
-                                    "You are in a RED zone. Evacuate immediately.",
-                                variant: "destructive",
-                                duration: 3000,
-                            });
-                        }
+          // 🚦 Zone checks
+          const zoneType = checkRestrictedZone(newLocation);
 
-                        // 🟨 Yellow Zone
-                        if (
-                            zoneType === "yellow" &&
-                            inRestrictedZone !== "yellow"
-                        ) {
-                            setInRestrictedZone("yellow");
-                            toast({
-                                title: "⚠️ Caution Zone",
-                                description:
-                                    "You are in a YELLOW zone. Stay alert.",
-                                variant: "warning" as any,
-                                duration: 3000,
-                            });
-                        }
+          if (zoneType !== inRestrictedZone) {
+            setInRestrictedZone(zoneType);
 
-                        // ⛔ Restricted Zone
-                        if (
-                            zoneType === "restricted" &&
-                            inRestrictedZone !== "restricted"
-                        ) {
-                            setInRestrictedZone("restricted");
-                            toast({
-                                title: "⛔ Restricted Zone",
-                                description:
-                                    "You are in a RESTRICTED zone. Limited access.",
-                                variant: "default",
-                                duration: 3000,
-                            });
-                        }
-
-                        // ✅ Green Zone
-                        if (
-                            zoneType === "green" &&
-                            inRestrictedZone !== "green"
-                        ) {
-                            setInRestrictedZone("green");
-                            toast({
-                                title: "✅ Safe Zone",
-                                description:
-                                    "You are in a GREEN zone. All clear.",
-                                variant: "success" as any,
-                                duration: 3000,
-                            });
-                        }
-                    },
-                    (error) => {
-                        console.error("Location error:", error);
-                    }
-                );
-            }, 5000);
-            return () => clearInterval(interval);
-        }
-    }, [isTracking, toast, inRestrictedZone]);
-
-    // ✅ NEW: Check again if restricted zones change (even if location is same)
-    useEffect(() => {
-        if (currentLocation) {
-            const zoneType = checkRestrictedZone(currentLocation);
-
-            if (zoneType !== inRestrictedZone) {
-                setInRestrictedZone(zoneType);
-
-                // Show toast based on zone
-                switch (zoneType) {
-                    case "red":
-                        toast({
-                            title: "🚨 Danger Zone!",
-                            description:
-                                "You are in a RED zone. Evacuate immediately.",
-                            variant: "destructive",
-                            duration: 3000,
-                        });
-                        break;
-                    case "yellow":
-                        toast({
-                            title: "⚠️ Caution Zone",
-                            description:
-                                "You are in a YELLOW zone. Stay alert.",
-                            variant: "warning" as any, // or update your ToastVariant type
-                            duration: 3000,
-                        });
-                        break;
-                    case "restricted":
-                        toast({
-                            title: "⛔ Restricted Zone",
-                            description:
-                                "You are in a RESTRICTED zone. Limited access.",
-                            variant: "default",
-                            duration: 3000,
-                        });
-                        break;
-                    case "green":
-                        toast({
-                            title: "✅ Safe Zone",
-                            description: "You are in a GREEN zone. All clear.",
-                            variant: "success" as any, // or update your ToastVariant type
-                            duration: 3000,
-                        });
-                        break;
-                }
+            switch (zoneType) {
+              case "red":
+                toast({
+                  title: "🚨 Danger Zone!",
+                  description: "You are in a RED zone. Evacuate immediately.",
+                  variant: "destructive",
+                  duration: 3000,
+                });
+                break;
+              case "yellow":
+                toast({
+                  title: "⚠️ Caution Zone",
+                  description: "You are in a YELLOW zone. Stay alert.",
+                  variant: "warning" as any,
+                  duration: 3000,
+                });
+                break;
+              case "restricted":
+                toast({
+                  title: "⛔ Restricted Zone",
+                  description: "You are in a RESTRICTED zone. Limited access.",
+                  variant: "default",
+                  duration: 3000,
+                });
+                break;
+              case "green":
+                toast({
+                  title: "✅ Safe Zone",
+                  description: "You are in a GREEN zone. All clear.",
+                  variant: "success" as any,
+                  duration: 3000,
+                });
+                break;
             }
+          }
+        },
+        (error) => {
+          console.error("Location error:", error);
         }
-    }, [currentLocation, inRestrictedZone, restrictedZones, toast]);
+      );
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }
+}, [isTracking, touristData.id, inRestrictedZone, toast]);
+
 
 
     // ✅ Check restricted zone correctly
@@ -298,63 +244,98 @@ const TouristApp = () => {
         return "green"; // default safe zone
     };
 
-    const handleRegister = () => {
-        if (
-            !touristData.name ||
-            !touristData.age ||
-            !touristData.idProof ||
-            !touristData.emergencyContact
-        ) {
-            toast({
-                title: "Missing Information",
-                description: "Please fill in all required fields.",
-                variant: "destructive",
-            });
-            return;
-        }
-        const newId =
-            "TRS-" + Math.random().toString(36).substr(2, 9).toUpperCase();
-        setTouristData((prev) => ({ ...prev, id: newId }));
-        setStep("dashboard");
-        setIsTracking(true);
-        toast({
-            title: "Registration Successful!",
-            description: `Tourist ID: ${newId} - Location tracking activated.`,
-        });
-    };
+    const handleRegister = async () => {
+  if (
+    !touristData.name ||
+    !touristData.age ||
+    !touristData.idProof ||
+    !touristData.emergencyContact
+  ) {
+    toast({
+      title: "Missing Information",
+      description: "Please fill in all required fields.",
+      variant: "destructive",
+    });
+    return;
+  }
 
-    const handleSOS = () => {
-        if (currentLocation) {
-            // Google Maps link with coordinates
-            const mapsLink = `https://maps.google.com/?q=${currentLocation.lat},${currentLocation.lng}`;
+  try {
+    const res = await fetch(`${API_BASE}/tourists`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(touristData), // send entered details
+    });
 
-            // Create SMS link with emergency contact, name, and location link
-            const smsBody = encodeURIComponent(
-                `🚨 SOS! This is ${touristData.name}. I need help!\nMy location: ${mapsLink}`
-            );
+    if (!res.ok) throw new Error("Failed to register tourist");
 
-            const smsLink = `sms:${touristData.emergencyContact}?body=${smsBody}`;
+    const data = await res.json(); // ✅ backend returns tourist with ID
+    setTouristData(data);          // store backend-generated ID in state
+    setStep("dashboard");
+    setIsTracking(true);
 
-            // Open SMS app
-            window.location.href = smsLink;
+    toast({
+      title: "Registration Successful!",
+      description: `Tourist ID: ${data.id} - Location tracking activated.`,
+    });
+  } catch (err) {
+    console.error(err);
+    toast({
+      title: "Registration Failed",
+      description: "Could not connect to server.",
+      variant: "destructive",
+    });
+  }
+};
 
-            // Toast for user feedback
-            toast({
-                title: "🚨 SOS ALERT!",
-                description: `Opening SMS app to notify your emergency contact.`,
-                variant: "destructive",
-            });
 
-            console.log("SOS Alert:", {
-                touristId: touristData.id,
-                name: touristData.name,
-                location: currentLocation,
-                mapsLink,
-                timestamp: new Date().toISOString(),
-                emergencyContact: touristData.emergencyContact,
-            });
-        }
-    };
+    const handleSOS = async () => {
+  if (!currentLocation || !touristData.id) return;
+
+  // Google Maps link with coordinates
+  const mapsLink = `https://maps.google.com/?q=${currentLocation.lat},${currentLocation.lng}`;
+
+  // Create SMS link with emergency contact, name, and location link
+  const smsBody = encodeURIComponent(
+    `🚨 SOS! This is ${touristData.name}. I need help!\nMy location: ${mapsLink}`
+  );
+  const smsLink = `sms:${touristData.emergencyContact}?body=${smsBody}`;
+
+  try {
+    // ✅ Send SOS to backend
+    await fetch(`${API_BASE}/tourists/${touristData.id}/sos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(currentLocation),
+    });
+
+    // ✅ Open SMS app
+    window.location.href = smsLink;
+
+    // ✅ Toast for user feedback
+    toast({
+      title: "🚨 SOS Sent!",
+      description: "Authorities and your emergency contact have been notified.",
+      variant: "destructive",
+    });
+
+    console.log("SOS Alert Sent:", {
+      touristId: touristData.id,
+      name: touristData.name,
+      location: currentLocation,
+      mapsLink,
+      timestamp: new Date().toISOString(),
+      emergencyContact: touristData.emergencyContact,
+    });
+  } catch (err) {
+    console.error("SOS failed:", err);
+    toast({
+      title: "❌ SOS Failed",
+      description: "Could not notify authorities. Please call emergency services.",
+      variant: "destructive",
+    });
+  }
+};
+
 
     // ===================== REGISTER PAGE =====================
     if (step === "register") {

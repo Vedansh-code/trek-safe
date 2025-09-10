@@ -34,145 +34,144 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
+// ====================== Interfaces ======================
 interface Tourist {
   id: string;
   name: string;
   age: string;
   location: { lat: number; lng: number };
-  status: 'safe' | 'warning' | 'emergency';
+  status: "safe" | "warning" | "emergency";
   lastUpdate: string;
   emergencyContact: string;
 }
 
 interface Alert {
   id: string;
-  type: 'sos' | 'geofence' | 'inactive';
+  type: "sos" | "geofence" | "inactive";
   touristId: string;
   touristName: string;
   message: string;
   location: { lat: number; lng: number };
   timestamp: string;
-  status: 'active' | 'resolved';
+  status: "active" | "resolved";
 }
 
+// ====================== Backend URL ======================
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+
+// ====================== Component ======================
 const PoliceDashboard = () => {
   const [tourists, setTourists] = useState<Tourist[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [selectedTourist, setSelectedTourist] = useState<Tourist | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showMap, setShowMap] = useState(false); // ✅ Map popup toggle state
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showMap, setShowMap] = useState(false);
   const { toast } = useToast();
 
+  // ====================== Fetch Data ======================
   useEffect(() => {
-    const mockTourists: Tourist[] = [
-      {
-        id: 'TRS-ABC123',
-        name: 'John Smith',
-        age: '28',
-        location: { lat: 40.7128, lng: -74.0060 },
-        status: 'safe',
-        lastUpdate: new Date().toISOString(),
-        emergencyContact: '+1-234-567-8900'
-      },
-      {
-        id: 'TRS-DEF456',
-        name: 'Maria Garcia',
-        age: '34',
-        location: { lat: 40.7580, lng: -73.9855 },
-        status: 'warning',
-        lastUpdate: new Date(Date.now() - 300000).toISOString(),
-        emergencyContact: '+1-234-567-8901'
-      },
-      {
-        id: 'TRS-GHI789',
-        name: 'David Chen',
-        age: '25',
-        location: { lat: 40.6892, lng: -74.0445 },
-        status: 'emergency',
-        lastUpdate: new Date(Date.now() - 120000).toISOString(),
-        emergencyContact: '+1-234-567-8902'
+    const fetchData = async () => {
+      try {
+        // Tourists (with latest location + SOS)
+        const res = await fetch(`${API_BASE}/police/tourists`);
+        const data = await res.json();
+
+        const mappedTourists: Tourist[] = data.map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          age: String(t.age),
+          location:
+            t.currentLat && t.currentLng
+              ? { lat: t.currentLat, lng: t.currentLng }
+              : { lat: 0, lng: 0 },
+          status: t.lastSOS
+            ? "emergency"
+            : t.currentLat
+            ? "safe"
+            : "warning",
+          lastUpdate: t.created_at,
+          emergencyContact: t.emergencyContact,
+        }));
+
+        setTourists(mappedTourists);
+
+        // SOS Alerts
+        const sosRes = await fetch(`${API_BASE}/sos_alerts`);
+        const sosData = await sosRes.json();
+
+        const mappedAlerts: Alert[] = sosData.map((a: any) => ({
+          id: `ALERT-${a.id}`,
+          type: "sos",
+          touristId: a.touristId,
+          touristName:
+            mappedTourists.find((t) => t.id === a.touristId)?.name ||
+            "Unknown",
+          message: "Emergency SOS alert triggered",
+          location: { lat: a.lat, lng: a.lng },
+          timestamp: a.timestamp,
+          status: "active",
+        }));
+
+        setAlerts(mappedAlerts);
+      } catch (error) {
+        console.error("❌ Error fetching data:", error);
       }
-    ];
+    };
 
-    const mockAlerts: Alert[] = [
-      {
-        id: 'ALERT-001',
-        type: 'sos',
-        touristId: 'TRS-GHI789',
-        touristName: 'David Chen',
-        message: 'Emergency SOS alert triggered',
-        location: { lat: 40.6892, lng: -74.0445 },
-        timestamp: new Date(Date.now() - 120000).toISOString(),
-        status: 'active'
-      },
-      {
-        id: 'ALERT-002',
-        type: 'geofence',
-        touristId: 'TRS-DEF456',
-        touristName: 'Maria Garcia',
-        message: 'Entered restricted zone',
-        location: { lat: 40.7580, lng: -73.9855 },
-        timestamp: new Date(Date.now() - 300000).toISOString(),
-        status: 'active'
-      }
-    ];
-
-    setTourists(mockTourists);
-    setAlerts(mockAlerts);
-
-    const interval = setInterval(() => {
-      setTourists(prev => prev.map(tourist => ({
-        ...tourist,
-        location: {
-          lat: tourist.location.lat + (Math.random() - 0.5) * 0.001,
-          lng: tourist.location.lng + (Math.random() - 0.5) * 0.001
-        },
-        lastUpdate: tourist.status === 'safe' ? new Date().toISOString() : tourist.lastUpdate
-      })));
-    }, 10000);
-
+    fetchData();
+    const interval = setInterval(fetchData, 10000);
     return () => clearInterval(interval);
   }, []);
 
+  // ====================== Helpers ======================
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'safe': return 'text-success bg-success/10 border-success/20';
-      case 'warning': return 'text-warning bg-warning/10 border-warning/20';
-      case 'emergency': return 'text-emergency bg-emergency/10 border-emergency/20';
-      default: return 'text-muted-foreground';
+      case "safe":
+        return "text-green-600 bg-green-100 border-green-300";
+      case "warning":
+        return "text-yellow-600 bg-yellow-100 border-yellow-300";
+      case "emergency":
+        return "text-red-600 bg-red-100 border-red-300";
+      default:
+        return "text-muted-foreground";
     }
   };
 
   const getAlertTypeColor = (type: string) => {
     switch (type) {
-      case 'sos': return 'text-emergency bg-emergency/10 border-emergency/20';
-      case 'geofence': return 'text-warning bg-warning/10 border-warning/20';
-      case 'inactive': return 'text-muted-foreground bg-muted/50 border-muted';
-      default: return 'text-muted-foreground';
+      case "sos":
+        return "text-red-600 bg-red-100 border-red-300";
+      case "geofence":
+        return "text-yellow-600 bg-yellow-100 border-yellow-300";
+      case "inactive":
+        return "text-gray-500 bg-gray-100 border-gray-300";
+      default:
+        return "text-muted-foreground";
     }
   };
 
   const resolveAlert = (alertId: string) => {
-    setAlerts(prev => prev.map(alert =>
-      alert.id === alertId ? { ...alert, status: 'resolved' } : alert
-    ));
+    setAlerts((prev) =>
+      prev.map((alert) =>
+        alert.id === alertId ? { ...alert, status: "resolved" } : alert
+      )
+    );
     toast({
       title: "Alert Resolved",
       description: "Alert has been marked as resolved",
     });
   };
 
-  const filteredTourists = tourists.filter(tourist =>
-    tourist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tourist.id.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredTourists = tourists.filter(
+    (tourist) =>
+      tourist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tourist.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const activeAlerts = alerts.filter(alert => alert.status === 'active');
+  const activeAlerts = alerts.filter((alert) => alert.status === "active");
 
-  const openModal = (tourist: Tourist) => {
-    setSelectedTourist(tourist);
-  };
+  const openModal = (tourist: Tourist) => setSelectedTourist(tourist);
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -186,9 +185,11 @@ const PoliceDashboard = () => {
     }
   }, [selectedTourist]);
 
+  // ====================== Render ======================
   return (
     <div className="min-h-screen bg-gradient-to-br from-police/5 via-background to-primary/5">
       <div className="container mx-auto px-4 py-8">
+        {/* Header */}
         <div className="mb-8">
           <Link to="/">
             <Button variant="ghost" className="mb-4">
@@ -200,42 +201,66 @@ const PoliceDashboard = () => {
             <div className="flex items-center gap-3">
               <Shield className="h-8 w-8 text-police" />
               <div>
-                <h1 className="text-3xl font-bold text-police">Police Dashboard</h1>
-                <p className="text-muted-foreground">Tourist Safety Monitoring & Incident Response</p>
+                <h1 className="text-3xl font-bold text-police">
+                  Police Dashboard
+                </h1>
+                <p className="text-muted-foreground">
+                  Tourist Safety Monitoring & Incident Response
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-4">
               {activeAlerts.length > 0 && (
                 <div className="flex items-center gap-2">
-                  <Bell className="h-5 w-5 text-emergency animate-pulse" />
-                  <Badge variant="destructive">{activeAlerts.length} Active Alerts</Badge>
+                  <Bell className="h-5 w-5 text-red-600 animate-pulse" />
+                  <Badge variant="destructive">
+                    {activeAlerts.length} Active Alerts
+                  </Badge>
                 </div>
               )}
               <div className="text-right">
-                <div className="text-sm text-muted-foreground">Active Tourists</div>
-                <div className="text-2xl font-bold text-police">{tourists.length}</div>
+                <div className="text-sm text-muted-foreground">
+                  Active Tourists
+                </div>
+                <div className="text-2xl font-bold text-police">
+                  {tourists.length}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
+        {/* Grid Layout */}
         <div className="grid lg:grid-cols-4 gap-6">
+          {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            <Card className="border-emergency/30">
+            {/* Alerts */}
+            <Card className="border-red-300">
               <CardHeader>
-                <CardTitle className="text-emergency flex items-center gap-2">
+                <CardTitle className="text-red-600 flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5" />
                   Active Alerts ({activeAlerts.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {activeAlerts.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">No active alerts</p>
+                  <p className="text-muted-foreground text-center py-4">
+                    No active alerts
+                  </p>
                 ) : (
                   activeAlerts.map((alert) => (
-                    <div key={alert.id} className={`p-3 rounded-lg border ${getAlertTypeColor(alert.type)}`}>
+                    <div
+                      key={alert.id}
+                      className={`p-3 rounded-lg border ${getAlertTypeColor(
+                        alert.type
+                      )}`}
+                    >
                       <div className="flex items-center justify-between mb-2">
-                        <Badge variant={alert.type === 'sos' ? 'destructive' : 'secondary'}>
+                        <Badge
+                          variant={
+                            alert.type === "sos" ? "destructive" : "secondary"
+                          }
+                        >
                           {alert.type.toUpperCase()}
                         </Badge>
                         <span className="text-xs">
@@ -243,7 +268,9 @@ const PoliceDashboard = () => {
                         </span>
                       </div>
                       <div className="font-medium">{alert.touristName}</div>
-                      <div className="text-sm text-muted-foreground mb-2">{alert.message}</div>
+                      <div className="text-sm text-muted-foreground mb-2">
+                        {alert.message}
+                      </div>
                       <Button
                         size="sm"
                         variant="outline"
@@ -258,13 +285,16 @@ const PoliceDashboard = () => {
               </CardContent>
             </Card>
 
+            {/* QR Scanner Placeholder */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <QrCode className="h-5 w-5" />
                   QR Scanner
                 </CardTitle>
-                <CardDescription>Scan tourist QR codes for profile access</CardDescription>
+                <CardDescription>
+                  Scan tourist QR codes for profile access
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <Button variant="police" className="w-full mb-4">
@@ -277,6 +307,7 @@ const PoliceDashboard = () => {
             </Card>
           </div>
 
+          {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
             <Card>
               <CardHeader>
@@ -302,22 +333,35 @@ const PoliceDashboard = () => {
               </CardHeader>
             </Card>
 
+            {/* Tourists List */}
             <div className="grid gap-4">
               {filteredTourists.map((tourist) => (
-                <Card key={tourist.id} className={`transition-all duration-200 hover:shadow-md ${tourist.status === 'emergency' ? 'border-emergency/50' : ''}`}>
+                <Card
+                  key={tourist.id}
+                  className={`transition-all duration-200 hover:shadow-md ${
+                    tourist.status === "emergency" ? "border-red-400" : ""
+                  }`}
+                >
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStatusColor(tourist.status)}`}>
+                        <div
+                          className={`w-12 h-12 rounded-full flex items-center justify-center ${getStatusColor(
+                            tourist.status
+                          )}`}
+                        >
                           <Users className="h-6 w-6" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-lg">{tourist.name}</h3>
+                          <h3 className="font-semibold text-lg">
+                            {tourist.name}
+                          </h3>
                           <p className="text-muted-foreground">{tourist.id}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <MapPin className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm">
-                              {tourist.location.lat.toFixed(4)}, {tourist.location.lng.toFixed(4)}
+                              {tourist.location.lat.toFixed(4)},{" "}
+                              {tourist.location.lng.toFixed(4)}
                             </span>
                           </div>
                         </div>
@@ -331,11 +375,15 @@ const PoliceDashboard = () => {
                           {new Date(tourist.lastUpdate).toLocaleTimeString()}
                         </div>
                         <div className="space-x-2">
-                          <Button size="sm" variant="outline" onClick={() => openModal(tourist)}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openModal(tourist)}
+                          >
                             View Details
                           </Button>
-                          {tourist.status === 'emergency' && (
-                            <Button size="sm" variant="emergency">
+                          {tourist.status === "emergency" && (
+                            <Button size="sm" variant="destructive">
                               Respond
                             </Button>
                           )}
@@ -350,17 +398,17 @@ const PoliceDashboard = () => {
         </div>
       </div>
 
-            {/* Modal with opening & closing transition */}
+      {/* Tourist Modal */}
       {selectedTourist && (
         <div
           className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-opacity duration-300 ${
-            isModalOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            isModalOpen ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
           onClick={closeModal}
         >
           <div
             className={`bg-background rounded-xl shadow-lg max-w-lg w-full p-6 transform transition-all duration-300 ${
-              isModalOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+              isModalOpen ? "scale-100 opacity-100" : "scale-95 opacity-0"
             }`}
             onClick={(e) => e.stopPropagation()}
           >
@@ -373,29 +421,55 @@ const PoliceDashboard = () => {
 
             <div className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
-                <div><strong>Name:</strong> {selectedTourist.name}</div>
-                <div><strong>Age:</strong> {selectedTourist.age}</div>
-                <div><strong>Tourist ID:</strong> {selectedTourist.id}</div>
-                <div className={`font-medium ${getStatusColor(selectedTourist.status)}`}>
-                  <strong>Status:</strong> {selectedTourist.status.toUpperCase()}
+                <div>
+                  <strong>Name:</strong> {selectedTourist.name}
                 </div>
-                <div><strong>Emergency Contact:</strong> {selectedTourist.emergencyContact}</div>
-                <div><strong>Last Update:</strong> {new Date(selectedTourist.lastUpdate).toLocaleString()}</div>
+                <div>
+                  <strong>Age:</strong> {selectedTourist.age}
+                </div>
+                <div>
+                  <strong>Tourist ID:</strong> {selectedTourist.id}
+                </div>
+                <div
+                  className={`font-medium ${getStatusColor(
+                    selectedTourist.status
+                  )}`}
+                >
+                  <strong>Status:</strong>{" "}
+                  {selectedTourist.status.toUpperCase()}
+                </div>
+                <div>
+                  <strong>Emergency Contact:</strong>{" "}
+                  {selectedTourist.emergencyContact}
+                </div>
+                <div>
+                  <strong>Last Update:</strong>{" "}
+                  {new Date(selectedTourist.lastUpdate).toLocaleString()}
+                </div>
               </div>
 
-              {/* Mini map for this tourist only */}
+              {/* Mini map */}
               <div>
                 <strong>Current Location:</strong>
                 <div className="mt-2 h-64 w-full rounded-lg overflow-hidden border">
                   <MapContainer
-                    center={[selectedTourist.location.lat, selectedTourist.location.lng]}
+                    center={[
+                      selectedTourist.location.lat,
+                      selectedTourist.location.lng,
+                    ]}
                     zoom={14}
                     style={{ height: "100%", width: "100%" }}
                   >
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    <Marker position={[selectedTourist.location.lat, selectedTourist.location.lng]}>
+                    <Marker
+                      position={[
+                        selectedTourist.location.lat,
+                        selectedTourist.location.lng,
+                      ]}
+                    >
                       <Popup>
-                        {selectedTourist.name} ({selectedTourist.status.toUpperCase()})
+                        {selectedTourist.name} (
+                        {selectedTourist.status.toUpperCase()})
                       </Popup>
                     </Marker>
                   </MapContainer>
@@ -411,43 +485,42 @@ const PoliceDashboard = () => {
         </div>
       )}
 
-
-      {/* Map Popup Overlay */}
-      {/* Map Popup Overlay */}
-{showMap && (
-  <div
-    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-    onClick={() => setShowMap(false)}
-  >
-    <div
-      className="relative bg-background rounded-2xl shadow-xl w-[95%] max-w-5xl h-[85vh] flex flex-col overflow-hidden"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {/* Close button */}
-      <div className="absolute top-3 right-3 z-[1000]">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-full bg-white/80 backdrop-blur hover:bg-white"
+      {/* Map Popup */}
+      {showMap && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
           onClick={() => setShowMap(false)}
         >
-          <X className="h-5 w-5 text-black" />
-        </Button>
-      </div>
-
-      {/* Map fills the popup */}
-      <MapContainer
-        center={[40.7128, -74.0060]}
-        zoom={12}
-        className="flex-1 w-full h-full rounded-b-2xl"
-      >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        {tourists.map((tourist) => (
-          <Marker
-            key={tourist.id}
-            position={[tourist.location.lat, tourist.location.lng]}
+          <div
+            className="relative bg-background rounded-2xl shadow-xl w-[95%] max-w-5xl h-[85vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
           >
-            <Popup>
+            {/* Close button */}
+            <div className="absolute top-3 right-3 z-[1000]">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full bg-white/80 backdrop-blur hover:bg-white"
+                onClick={() => setShowMap(false)}
+              >
+                <X className="h-5 w-5 text-black" />
+              </Button>
+            </div>
+
+            {/* Map */}
+            <MapContainer
+              center={[40.7128, -74.006]}
+              zoom={12}
+              className="flex-1 w-full h-full rounded-b-2xl"
+            >
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              {tourists.map((tourist) => (
+                <Marker
+                  key={tourist.id}
+                  position={[tourist.location.lat, tourist.location.lng]}
+                >
+                  <Popup>
+
               <div className="font-semibold">{tourist.name}</div>
               <div className="text-sm text-muted-foreground">
                 Status: {tourist.status.toUpperCase()}
