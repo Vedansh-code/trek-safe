@@ -297,9 +297,11 @@ const PoliceDashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                <Link to="/pages" className="block">
                 <Button variant="police" className="w-full mb-4">
                   Open Scanner
                 </Button>
+                </Link>
                 <p className="text-xs text-muted-foreground text-center">
                   Instantly access tourist profiles and itineraries
                 </p>
