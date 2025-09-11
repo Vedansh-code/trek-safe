@@ -618,9 +618,9 @@ const TouristApp = () => {
                                         className="rounded-lg overflow-hidden border-2 border-slate-700"
                                     >
                                         <TileLayer
-                                            attribution='© <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>, © <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
-                                            url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
-                                        />
+  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+/>
                                         <Marker
                                             position={[
                                                 currentLocation.lat,
@@ -754,9 +754,9 @@ const TouristApp = () => {
                                 style={{ height: "100%", width: "100%" }}
                             >
                                 <TileLayer
-                                    attribution='© <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>, © <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
-                                    url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
-                                />
+  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+/>
                                 <Marker
                                     position={[
                                         currentLocation.lat,
