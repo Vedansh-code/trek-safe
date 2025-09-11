@@ -74,11 +74,11 @@ const Index = () => {
                     <div className="flex justify-center items-center gap-4 mb-6">
                         <Shield className="h-14 w-14 text-indigo-400" />
                         <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-br from-white to-slate-400 bg-clip-text text-transparent">
-                            SafeGuard
+                            IRIS
                         </h1>
                     </div>
                     <p className="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto">
-                        Your personal safety net while exploring the world.
+                        Intelligent Real-time Integrated Safety
                         Real-time protection powered by intelligent monitoring
                         technology.
                     </p>

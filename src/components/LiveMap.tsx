@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Navigation, AlertTriangle } from 'lucide-react';
+import { MapPin, AlertTriangle } from 'lucide-react';
 
 interface Location {
   lat: number;
@@ -48,51 +48,17 @@ const LiveMap = ({ touristId, currentLocation, status }: LiveMapProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Map Placeholder */}
-        <div className="relative h-64 bg-muted rounded-lg overflow-hidden">
-          {/* Simulated Map Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-green-100">
-            {/* Grid Pattern */}
-            <div className="absolute inset-0 opacity-20">
-              <svg width="100%" height="100%" className="fill-current text-gray-400">
-                <defs>
-                  <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" strokeWidth="1"/>
-                  </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#grid)" />
-              </svg>
-            </div>
-          </div>
-
-          {/* Tourist Marker */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <div className={`relative ${getStatusColor(status)} rounded-full p-3 shadow-lg animate-pulse`}>
-              <Navigation className="h-6 w-6 text-white" />
-              <div className="absolute -top-1 -right-1 bg-white text-xs px-2 py-1 rounded-full shadow">
-                {touristId}
-              </div>
-            </div>
-          </div>
-
-          {/* Status Overlay */}
-          {status === 'danger' && (
-            <div className="absolute top-4 left-4 right-4">
-              <div className="bg-status-danger text-white px-3 py-2 rounded-lg flex items-center gap-2 shadow-lg">
-                <AlertTriangle className="h-4 w-4" />
-                <span className="text-sm font-medium">SOS ALERT ACTIVE</span>
-              </div>
-            </div>
-          )}
-
-          {status === 'warning' && (
-            <div className="absolute top-4 left-4 right-4">
-              <div className="bg-status-warning text-white px-3 py-2 rounded-lg flex items-center gap-2 shadow-lg">
-                <AlertTriangle className="h-4 w-4" />
-                <span className="text-sm font-medium">RESTRICTED ZONE DETECTED</span>
-              </div>
-            </div>
-          )}
+        
+        {/* Hardcoded Map (Delhi Technological University) */}
+        <div className="relative h-64 rounded-lg overflow-hidden">
+          <iframe
+            width="100%"
+            height="100%"
+            loading="lazy"
+            allowFullScreen
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3503.476107774279!2d77.11667231508384!3d28.749930882373585!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390d012d7f8b6d7f%3A0xd52c08cf3afc9f51!2sDelhi%20Technological%20University!5e0!3m2!1sen!2sin!4v1634130000000!5m2!1sen!2sin"
+            style={{ border: 0 }}
+          ></iframe>
         </div>
 
         {/* Location Details */}

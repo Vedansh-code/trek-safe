@@ -536,31 +536,23 @@ const TouristApp = () => {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3 text-sm">
-                                <div className="flex justify-between">
-                                    <strong className="text-slate-300">
-                                        Name:
-                                    </strong>{" "}
-                                    <span>{touristData.name}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <strong className="text-slate-300">
-                                        Age:
-                                    </strong>{" "}
-                                    <span>{touristData.age}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <strong className="text-slate-300">
-                                        ID Proof:
-                                    </strong>{" "}
-                                    <span>{touristData.idProof}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <strong className="text-slate-300">
-                                        Emergency:
-                                    </strong>{" "}
-                                    <span>{touristData.emergencyContact}</span>
-                                </div>
-                            </CardContent>
+  <div className="flex justify-between">
+    <strong className="text-slate-300">Name:</strong>
+    <span className="text-slate-100">{touristData.name}</span>
+  </div>
+  <div className="flex justify-between">
+    <strong className="text-slate-300">Age:</strong>
+    <span className="text-slate-100">{touristData.age}</span>
+  </div>
+  <div className="flex justify-between">
+    <strong className="text-slate-300">ID Proof:</strong>
+    <span className="text-slate-100">{touristData.idProof}</span>
+  </div>
+  <div className="flex justify-between">
+    <strong className="text-slate-300">Emergency:</strong>
+    <span className="text-slate-100">{touristData.emergencyContact}</span>
+  </div>
+</CardContent>
                         </Card>
                     </div>
 
