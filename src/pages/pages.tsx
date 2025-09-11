@@ -11,22 +11,22 @@ import { Shield, AlertCircle, Users, Activity } from 'lucide-react';
 // Mock data for demonstration
 const mockTourist = {
   id: "T001",
-  name: "Sarah Johnson",
-  age: 28,
-  gender: "Female",
+  name: "Vedansh",
+  age: 19,
+  gender: "Male",
   photo: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=400&fit=crop&crop=face",
-  idProofType: "Passport",
-  idProofNumber: "US123456789",
-  mobileNumber: "+1-555-0123",
+  idProofType: "Aadhar",
+  idProofNumber: "4968 8295 9640",
+  mobileNumber: "8287296041",
   emergencyContact: {
-    name: "John Johnson",
-    number: "+1-555-0124"
+    name: "Yanish Chawla",
+    number: "9266320829"
   },
   itinerary: [
-    "Day 1: Arrival at Mumbai Airport",
-    "Day 2: Visit Gateway of India",
-    "Day 3: Elephanta Caves Tour",
-    "Day 4: Marine Drive & Colaba Market",
+    "Day 1: Arrival",
+    "Day 2: Hauz Khas",
+    "Day 3: India Gate",
+    "Day 4: Cannaught Place",
     "Day 5: Departure"
   ],
   status: 'safe' as 'safe' | 'danger' | 'warning',
