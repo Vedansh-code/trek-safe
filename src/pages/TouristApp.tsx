@@ -47,6 +47,7 @@ interface TouristData {
     location?: { lat: number; lng: number };
 }
 
+
 // Helper function to get color based on zone type
 const getZoneColor = (type: "green" | "yellow" | "red" | "restricted") => {
     switch (type) {
@@ -97,7 +98,7 @@ const getSafetyAlertInfo = (
 };
 
 
-// ✅ Haversine distance (meters)
+// Haversine distance (meters)
 const getDistanceFromLatLonInMeters = (
     lat1: number,
     lon1: number,
@@ -119,6 +120,7 @@ const getDistanceFromLatLonInMeters = (
 };
 
 const TouristApp = () => {
+    const [loading, setLoading] = useState(false);
     const [step, setStep] = useState<"register" | "dashboard">("register");
     const [touristData, setTouristData] = useState<TouristData>({
         id: "",
@@ -244,7 +246,7 @@ const TouristApp = () => {
         return "green"; // default safe zone
     };
 
-    const handleRegister = async () => {
+const handleRegister = async () => {
   if (
     !touristData.name ||
     !touristData.age ||
@@ -259,6 +261,7 @@ const TouristApp = () => {
     return;
   }
 
+  setLoading(true); // start loading
   try {
     const res = await fetch(`${API_BASE}/tourists`, {
       method: "POST",
@@ -284,6 +287,8 @@ const TouristApp = () => {
       description: "Could not connect to server.",
       variant: "destructive",
     });
+  } finally {
+    setLoading(false); // stop loading regardless of success/fail
   }
 };
 
@@ -453,13 +458,14 @@ const TouristApp = () => {
                             </div>
 
                             <Button
-                                onClick={handleRegister}
-                                variant="success"
-                                size="lg"
-                                className="w-full"
-                            >
-                                Register & Start Tracking
-                            </Button>
+        onClick={handleRegister}
+      variant="success"
+      size="lg"
+      className="w-full"
+      disabled={loading}
+    >
+      {loading ? "Registering..." : "Register & Start Tracking"}
+    </Button>
                         </CardContent>
                     </Card>
                 </div>
