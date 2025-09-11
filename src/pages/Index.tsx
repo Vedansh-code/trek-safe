@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link as ScrollLink } from "react-scroll";
+import Chatbot from "@/components/chatbot";
 
 // Animation variants for Framer Motion
 const fadeIn = (direction = "up", delay = 0) => ({
@@ -424,8 +425,11 @@ const Index = () => {
                         Technology
                     </p>
                 </div>
+                {/* Chatbot Floating Widget */}
+                <Chatbot />
             </div>
         </div>
+        
     );
 };
 
