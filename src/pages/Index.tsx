@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +34,27 @@ const staggerContainer = {
 };
 
 const Index = () => {
+    interface Review {
+        id: string;
+        name: string;
+        rating: number;
+        comment: string;
+        date: string;
+    }
+
+    const [reviews, setReviews] = useState<Review[]>([]);
+
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem("trek_safe_reviews");
+            if (stored) {
+                setReviews(JSON.parse(stored));
+            }
+        } catch (error) {
+            console.error("Error parsing reviews:", error);
+        }
+    }, []);
+
     const howItWorksSteps = [
         {
             icon: <UserPlus size={32} />,
@@ -308,7 +330,7 @@ const Index = () => {
                     </div>
                 </div>
 
-                {/* ===== Section: Testimonials ===== */}
+                {/* ===== Section: Testimonials/Reviews ===== */}
                 <div className="my-24 py-16">
                     <motion.h2
                         variants={fadeIn()}
@@ -319,56 +341,71 @@ const Index = () => {
                     >
                         Trusted by Travelers
                     </motion.h2>
-                    <motion.div
-                        className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto"
-                        variants={staggerContainer}
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, amount: 0.5 }}
-                    >
+                    {reviews.length > 0 ? (
+                        <motion.div
+                            className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
+                            variants={staggerContainer}
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true, amount: 0.1 }}
+                        >
+                            {[...reviews]
+                                .sort((a, b) => Number(b.id) - Number(a.id))
+                                .map((review) => (
+                                    <motion.div
+                                        key={review.id}
+                                        variants={fadeIn()}
+                                        className="bg-slate-800/40 p-8 rounded-xl backdrop-blur-sm border border-slate-700 flex flex-col justify-between"
+                                    >
+                                        <div>
+                                            <div className="flex text-yellow-400 mb-4 gap-0.5">
+                                                {Array.from({ length: 5 }).map((_, i) => (
+                                                    <Star
+                                                        key={i}
+                                                        className={`h-5 w-5 ${
+                                                            i < review.rating
+                                                                ? "text-yellow-400 fill-yellow-400"
+                                                                : "text-slate-600"
+                                                        }`}
+                                                    />
+                                                ))}
+                                            </div>
+                                            <blockquote className="text-slate-300 italic">
+                                                "{review.comment}"
+                                            </blockquote>
+                                        </div>
+                                        <div className="flex justify-between items-center mt-6 border-t border-slate-700/50 pt-4">
+                                            <span className="font-bold text-slate-100">- {review.name}</span>
+                                            <span className="text-xs text-slate-500">{review.date}</span>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                        </motion.div>
+                    ) : (
                         <motion.div
                             variants={fadeIn()}
-                            className="bg-slate-800/40 p-8 rounded-xl backdrop-blur-sm border border-slate-700"
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true }}
+                            className="max-w-md mx-auto text-center bg-slate-800/20 p-8 rounded-2xl border border-slate-700/60 backdrop-blur-sm shadow-xl"
                         >
-                            <div className="flex text-yellow-400 mb-4">
-                                <Star />
-                                <Star />
-                                <Star />
-                                <Star />
-                                <Star />
+                            <div className="flex justify-center text-slate-600 mb-4">
+                                <Star className="h-12 w-12 text-slate-500" />
                             </div>
-                            <blockquote className="text-slate-300 italic">
-                                "Using SafeGuard gave me and my family
-                                incredible peace of mind. Knowing help was just
-                                a tap away let us enjoy our vacation without
-                                worry."
-                            </blockquote>
-                            <p className="font-bold text-slate-100 mt-4">
-                                - Maria S., Spain
+                            <h3 className="text-xl font-bold text-slate-200 mb-2">No Reviews Yet</h3>
+                            <p className="text-slate-400 text-sm mb-6">
+                                Be the first to share your journey! Registered tourists can submit ratings and safety feedback.
                             </p>
+                            <Button
+                                asChild
+                                className="bg-teal-500 hover:bg-teal-600 text-white font-semibold px-6 py-3 rounded-full shadow-lg shadow-teal-500/20 transition-all duration-300 cursor-pointer"
+                            >
+                                <RouterLink to="/tourist">
+                                    Share Your Experience
+                                </RouterLink>
+                            </Button>
                         </motion.div>
-                        <motion.div
-                            variants={fadeIn()}
-                            className="bg-slate-800/40 p-8 rounded-xl backdrop-blur-sm border border-slate-700"
-                        >
-                            <div className="flex text-yellow-400 mb-4">
-                                <Star />
-                                <Star />
-                                <Star />
-                                <Star />
-                                <Star />
-                            </div>
-                            <blockquote className="text-slate-300 italic">
-                                "As a solo traveler, safety is my top priority.
-                                This service is a game-changer. The geo-fencing
-                                alerts were particularly impressive and
-                                non-intrusive."
-                            </blockquote>
-                            <p className="font-bold text-slate-100 mt-4">
-                                - Kenji T., Japan
-                            </p>
-                        </motion.div>
-                    </motion.div>
+                    )}
                 </div>
 
                 {/* ===== Section: Final CTA ===== */}

@@ -8,6 +8,7 @@ import TouristApp from "./pages/TouristApp";
 import PoliceDashboard from "./pages/PoliceDashboard";
 import NotFound from "./pages/NotFound";
 import Pages from "./pages/pages";
+import PoliceLogin from "@/pages/PoliceLogin";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/tourist" element={<TouristApp />} />
           <Route path="/pages" element={<Pages />} />
+          <Route path="/police/login" element={<PoliceLogin />} />
           <Route path="/police" element={<PoliceDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

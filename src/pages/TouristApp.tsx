@@ -19,6 +19,7 @@ import {
     ArrowLeft,
     Expand,
     Minimize,
+    Star,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
@@ -142,6 +143,68 @@ const getDistanceFromLatLonInMeters = (
 const TouristApp = () => {
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState<"register" | "dashboard">("register");
+
+    // Rating & Review State
+    const [rating, setRating] = useState<number>(0);
+    const [reviewComment, setReviewComment] = useState<string>("");
+    const [hoveredRating, setHoveredRating] = useState<number>(0);
+
+    const handleSubmitReview = (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (rating === 0) {
+            toast({
+                title: "Rating Required",
+                description: "Please select a rating between 1 and 5 stars.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        if (!reviewComment.trim()) {
+            toast({
+                title: "Review Required",
+                description: "Please write a comment about your experience.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        const newReview = {
+            id: Date.now().toString(),
+            name: touristData.name || "Anonymous Traveler",
+            rating: rating,
+            comment: reviewComment.trim(),
+            date: new Date().toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            })
+        };
+
+        try {
+            const existingReviewsStr = localStorage.getItem("trek_safe_reviews");
+            const existingReviews = existingReviewsStr ? JSON.parse(existingReviewsStr) : [];
+            const updatedReviews = [newReview, ...existingReviews];
+            localStorage.setItem("trek_safe_reviews", JSON.stringify(updatedReviews));
+
+            toast({
+                title: "Feedback Submitted",
+                description: "Thank you for sharing your experience!",
+            });
+
+            // Reset form
+            setRating(0);
+            setReviewComment("");
+        } catch (error) {
+            console.error("Error saving review:", error);
+            toast({
+                title: "Submission Failed",
+                description: "Could not save your review. Please try again.",
+                variant: "destructive",
+            });
+        }
+    };
     const [touristData, setTouristData] = useState<TouristData>({
         id: "",
         name: "",
@@ -553,6 +616,67 @@ const TouristApp = () => {
     <span className="text-slate-100">{touristData.emergencyContact}</span>
   </div>
 </CardContent>
+                        </Card>
+
+                        <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+                            <CardHeader>
+                                <CardTitle className="text-white flex items-center gap-2">
+                                    <Star className="h-5 w-5 text-yellow-450 fill-yellow-450" /> Rate Your Journey
+                                </CardTitle>
+                                <CardDescription className="text-slate-400">
+                                    Share your trek safety experience to help other travelers.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <form onSubmit={handleSubmitReview} className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-300 block">
+                                            Safety & Experience Rating *
+                                        </Label>
+                                        <div className="flex items-center gap-1.5">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                <button
+                                                    key={star}
+                                                    type="button"
+                                                    onClick={() => setRating(star)}
+                                                    onMouseEnter={() => setHoveredRating(star)}
+                                                    onMouseLeave={() => setHoveredRating(0)}
+                                                    className="focus:outline-none transition-transform active:scale-95 duration-100"
+                                                >
+                                                    <Star
+                                                        className={`h-7 w-7 ${
+                                                            star <= (hoveredRating || rating)
+                                                                ? "text-yellow-400 fill-yellow-400"
+                                                                : "text-slate-600"
+                                                        }`}
+                                                    />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="reviewComment" className="text-slate-350">
+                                            Your Review *
+                                        </Label>
+                                        <Textarea
+                                            id="reviewComment"
+                                            value={reviewComment}
+                                            onChange={(e) => setReviewComment(e.target.value)}
+                                            placeholder="Write your feedback here..."
+                                            rows={3}
+                                            className="bg-slate-900/80 border-slate-600 text-white focus:ring-teal-500"
+                                        />
+                                    </div>
+
+                                    <Button
+                                        type="submit"
+                                        className="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 rounded-lg shadow-md transition-all duration-300"
+                                    >
+                                        Submit Review
+                                    </Button>
+                                </form>
+                            </CardContent>
                         </Card>
                     </div>
 

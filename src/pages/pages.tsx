@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -68,6 +69,18 @@ const mockAccessLogs = [
 ];
 
 const Index = () => {
+  const navigate = useNavigate();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const isAuth = sessionStorage.getItem("police_authenticated");
+    if (isAuth !== "true") {
+      navigate("/police/login", { replace: true });
+    } else {
+      setIsCheckingAuth(false);
+    }
+  }, [navigate]);
+
   const [scannedTourist, setScannedTourist] = useState<typeof mockTourist | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string>('');
@@ -135,6 +148,17 @@ const Index = () => {
     // Simulate PDF download
     console.log('Downloading tourist report...');
   };
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white p-4">
+        <div className="flex items-center gap-3">
+          <Shield className="h-8 w-8 text-indigo-400 animate-spin" />
+          <span className="font-medium text-slate-300">Verifying credentials...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

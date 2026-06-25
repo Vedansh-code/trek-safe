@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -93,6 +93,8 @@ const API_BASE = "https://trek-safe-backend.onrender.com";
 
 // ====================== Component ======================
 const PoliceDashboard = () => {
+    const navigate = useNavigate();
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [tourists, setTourists] = useState<Tourist[]>([]);
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [safetyZones, setSafetyZones] = useState<RestrictedZone[]>([]);
@@ -106,8 +108,21 @@ const PoliceDashboard = () => {
     const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
     const { toast } = useToast();
 
+    // ====================== Authentication Guard ======================
+    useEffect(() => {
+        const isAuth = sessionStorage.getItem("police_authenticated");
+        if (isAuth !== "true") {
+            navigate("/police/login", { replace: true });
+        } else {
+            setIsCheckingAuth(false);
+        }
+    }, [navigate]);
+
     // ====================== Fetch and Process Data ======================
     useEffect(() => {
+        const isAuth = sessionStorage.getItem("police_authenticated");
+        if (isAuth !== "true") return;
+
         setSafetyZones(restrictedZones);
 
         const fetchData = async () => {
@@ -333,6 +348,17 @@ const PoliceDashboard = () => {
     }, [selectedTourist]);
 
     // ====================== Render ======================
+    if (isCheckingAuth) {
+        return (
+            <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white p-4">
+                <div className="flex items-center gap-3">
+                    <Shield className="h-8 w-8 text-indigo-400 animate-spin" />
+                    <span className="text-slate-300 font-medium">Verifying credentials...</span>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="relative min-h-screen w-full overflow-x-hidden bg-slate-900 text-slate-100 p-4">
             <div className="absolute top-0 left-0 right-0 bottom-0 z-0">
