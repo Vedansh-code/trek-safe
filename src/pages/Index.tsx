@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,8 @@ import {
     Map,
     Siren,
     Star,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link as ScrollLink } from "react-scroll";
@@ -33,25 +35,62 @@ const staggerContainer = {
     },
 };
 
-const Index = () => {
-    interface Review {
-        id: string;
-        name: string;
-        rating: number;
-        comment: string;
-        date: string;
-    }
+interface Review {
+    id: string;
+    name: string;
+    rating: number;
+    comment: string;
+    date: string;
+}
 
+const DEFAULT_REVIEWS: Review[] = [
+    {
+        id: "default-1",
+        name: "Arjun Mehta",
+        rating: 5,
+        comment: "Trekking through the Parvati Valley was so much safer with IRIS active. The real-time safety zoning and automatic alerts gave my family absolute peace of mind.",
+        date: "12 June 2026"
+    },
+    {
+        id: "default-2",
+        name: "Sophia Martinez",
+        rating: 5,
+        comment: "The SOS emergency response is lightning fast! The local police coordinates were updated instantly when we needed assistance near the restricted border zone.",
+        date: "05 June 2026"
+    },
+    {
+        id: "default-3",
+        name: "Vikram Rathore",
+        rating: 4,
+        comment: "Excellent concept for safety. The QR-code scanning makes check-ins at entry points seamless and secure. Highly recommended for all Himalayan travelers.",
+        date: "28 May 2026"
+    }
+];
+
+const Index = () => {
     const [reviews, setReviews] = useState<Review[]>([]);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    const scrollLeft = () => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollBy({ left: -400, behavior: "smooth" });
+        }
+    };
+
+    const scrollRight = () => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollBy({ left: 400, behavior: "smooth" });
+        }
+    };
 
     useEffect(() => {
         try {
             const stored = localStorage.getItem("trek_safe_reviews");
-            if (stored) {
-                setReviews(JSON.parse(stored));
-            }
+            const parsedStored = stored ? JSON.parse(stored) : [];
+            setReviews([...parsedStored, ...DEFAULT_REVIEWS]);
         } catch (error) {
             console.error("Error parsing reviews:", error);
+            setReviews(DEFAULT_REVIEWS);
         }
     }, []);
 
@@ -322,7 +361,7 @@ const Index = () => {
                 </div>
 
                 {/* ===== Section: Testimonials/Reviews ===== */}
-                <div className="my-24 py-16">
+                <div className="my-24 py-16 relative">
                     <motion.h2
                         variants={fadeIn()}
                         initial="hidden"
@@ -332,70 +371,78 @@ const Index = () => {
                     >
                         Trusted by Travelers
                     </motion.h2>
-                    {reviews.length > 0 ? (
-                        <motion.div
-                            className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
-                            variants={staggerContainer}
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true, amount: 0.1 }}
+
+                    <div className="relative max-w-6xl mx-auto px-4 group/slider">
+                        {/* Slide Buttons */}
+                        <button
+                            onClick={scrollLeft}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-slate-900/80 border border-slate-700 hover:border-teal-500/50 hover:bg-slate-800 text-white rounded-full p-3 shadow-xl transition-all duration-300 opacity-80 md:opacity-0 group-hover/slider:opacity-100 flex items-center justify-center cursor-pointer"
+                            aria-label="Previous reviews"
+                        >
+                            <ChevronLeft className="h-6 w-6 text-teal-400" />
+                        </button>
+                        
+                        <button
+                            onClick={scrollRight}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-slate-900/80 border border-slate-700 hover:border-teal-500/50 hover:bg-slate-800 text-white rounded-full p-3 shadow-xl transition-all duration-300 opacity-80 md:opacity-0 group-hover/slider:opacity-100 flex items-center justify-center cursor-pointer"
+                            aria-label="Next reviews"
+                        >
+                            <ChevronRight className="h-6 w-6 text-teal-400" />
+                        </button>
+
+                        {/* Sliding Container */}
+                        <div
+                            ref={scrollContainerRef}
+                            className="flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-6 px-2 no-scrollbar"
+                            style={{ scrollbarWidth: "none" }}
                         >
                             {[...reviews]
                                 .sort((a, b) => Number(b.id) - Number(a.id))
                                 .map((review) => (
-                                    <motion.div
+                                    <div
                                         key={review.id}
-                                        variants={fadeIn()}
-                                        className="bg-slate-800/40 p-8 rounded-xl backdrop-blur-sm border border-slate-700 flex flex-col justify-between"
+                                        className="snap-start shrink-0 w-full sm:w-[calc(50%-12px)] md:w-[calc(33.33%-16px)] bg-slate-800/20 hover:bg-slate-800/40 p-8 rounded-xl backdrop-blur-md border border-slate-700 hover:border-teal-500/40 transition-all duration-500 shadow-2xl relative overflow-hidden group/card flex flex-col justify-between min-h-[240px]"
                                     >
+                                        {/* Glossy sheen effect on hover */}
+                                        <div className="absolute inset-0 w-[200%] -translate-x-full group-hover/card:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none" />
+
                                         <div>
                                             <div className="flex text-yellow-400 mb-4 gap-0.5">
                                                 {Array.from({ length: 5 }).map((_, i) => (
                                                     <Star
                                                         key={i}
-                                                        className={`h-5 w-5 ${i < review.rating
+                                                        className={`h-5 w-5 ${
+                                                            i < review.rating
                                                                 ? "text-yellow-400 fill-yellow-400"
                                                                 : "text-slate-600"
-                                                            }`}
+                                                        }`}
                                                     />
                                                 ))}
                                             </div>
-                                            <blockquote className="text-slate-300 italic">
+                                            <blockquote className="text-slate-300 italic relative z-10 text-sm md:text-base leading-relaxed">
                                                 "{review.comment}"
                                             </blockquote>
                                         </div>
-                                        <div className="flex justify-between items-center mt-6 border-t border-slate-700/50 pt-4">
-                                            <span className="font-bold text-slate-100">- {review.name}</span>
+                                        <div className="flex justify-between items-center mt-6 border-t border-slate-700/50 pt-4 relative z-10">
+                                            <span className="font-bold text-slate-100 text-sm">- {review.name}</span>
                                             <span className="text-xs text-slate-500">{review.date}</span>
                                         </div>
-                                    </motion.div>
+                                    </div>
                                 ))}
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            variants={fadeIn()}
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true }}
-                            className="max-w-md mx-auto text-center bg-slate-800/20 p-8 rounded-2xl border border-slate-700/60 backdrop-blur-sm shadow-xl"
+                        </div>
+                    </div>
+
+                    {/* Share Your Experience option linked to Tourist App */}
+                    <div className="text-center mt-12">
+                        <Button
+                            asChild
+                            className="bg-teal-500 hover:bg-teal-600 text-white font-semibold px-8 py-4 rounded-full shadow-lg shadow-teal-500/25 transition-all duration-300 cursor-pointer text-base"
                         >
-                            <div className="flex justify-center text-slate-600 mb-4">
-                                <Star className="h-12 w-12 text-slate-500" />
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-200 mb-2">No Reviews Yet</h3>
-                            <p className="text-slate-400 text-sm mb-6">
-                                Be the first to share your journey! Registered tourists can submit ratings and safety feedback.
-                            </p>
-                            <Button
-                                asChild
-                                className="bg-teal-500 hover:bg-teal-600 text-white font-semibold px-6 py-3 rounded-full shadow-lg shadow-teal-500/20 transition-all duration-300 cursor-pointer"
-                            >
-                                <RouterLink to="/tourist">
-                                    Share Your Experience
-                                </RouterLink>
-                            </Button>
-                        </motion.div>
-                    )}
+                            <RouterLink to="/tourist">
+                                Share Your Experience
+                            </RouterLink>
+                        </Button>
+                    </div>
                 </div>
 
                 {/* ===== Section: Final CTA ===== */}
