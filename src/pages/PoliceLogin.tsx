@@ -54,7 +54,7 @@ const PoliceLogin = () => {
             setError(null);
             setSuccess("Access Granted! Redirecting...");
             sessionStorage.setItem("police_authenticated", "true");
-            
+
             toast({
                 title: "Authentication Successful",
                 description: "Welcome back, Officer.",
@@ -169,7 +169,7 @@ const PoliceLogin = () => {
                                         <span className="font-semibold text-indigo-400 block mb-1">Generated OTP:</span>
                                         <span className="text-2xl font-bold tracking-widest text-white block my-1">{generatedOtp}</span>
                                         <span className="text-xs text-slate-400 italic">
-                                            Demo Mode: Since backend authentication is unavailable, the generated OTP is displayed for demonstration purposes.
+                                            Demo Mode: The Police Dashboard is currently running in demo mode. For demonstration purposes, the generated OTP is displayed on-screen instead of being verified through the backend.
                                         </span>
                                     </div>
 
