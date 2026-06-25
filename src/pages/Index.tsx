@@ -139,10 +139,7 @@ const Index = () => {
                         variants={fadeIn()}
                         className="bg-slate-800/20 p-6 rounded-xl backdrop-blur-sm border border-slate-700"
                     >
-                        <h3 className="text-4xl font-bold text-teal-400">
-                            24/7
-                        </h3>
-                        <p className="text-slate-400 mt-2">
+                        <p className="text-slate-200 text-lg font-semibold">
                             Real-time Monitoring
                         </p>
                     </motion.div>
@@ -150,21 +147,15 @@ const Index = () => {
                         variants={fadeIn()}
                         className="bg-slate-800/20 p-6 rounded-xl backdrop-blur-sm border border-slate-700"
                     >
-                        <h3 className="text-4xl font-bold text-teal-400">
-                            &lt;5min
-                        </h3>
-                        <p className="text-slate-400 mt-2">
-                            Average Response Time
+                        <p className="text-slate-200 text-lg font-semibold">
+                            Fast Response Time
                         </p>
                     </motion.div>
                     <motion.div
                         variants={fadeIn()}
                         className="bg-slate-800/20 p-6 rounded-xl backdrop-blur-sm border border-slate-700"
                     >
-                        <h3 className="text-4xl font-bold text-teal-400">
-                            99.9%
-                        </h3>
-                        <p className="text-slate-400 mt-2">
+                        <p className="text-slate-200 text-lg font-semibold">
                             System Reliability
                         </p>
                     </motion.div>
@@ -362,11 +353,10 @@ const Index = () => {
                                                 {Array.from({ length: 5 }).map((_, i) => (
                                                     <Star
                                                         key={i}
-                                                        className={`h-5 w-5 ${
-                                                            i < review.rating
+                                                        className={`h-5 w-5 ${i < review.rating
                                                                 ? "text-yellow-400 fill-yellow-400"
                                                                 : "text-slate-600"
-                                                        }`}
+                                                            }`}
                                                     />
                                                 ))}
                                             </div>
@@ -466,7 +456,7 @@ const Index = () => {
                 <Chatbot />
             </div>
         </div>
-        
+
     );
 };
 
